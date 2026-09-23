@@ -1,0 +1,8 @@
+{
+  "name": "hfd",
+  "version": "0.1.0",
+  "description": "하프던클럽 스타터 킷 — 공식 기준에 맞는 하네스를 bootstrap → project-planner → wrap 흐름으로 짠다. 공용 하네스 규칙 세트(harness) 포함.",
+  "author": { "name": "Halfdone Club", "email": "910408aa@gmail.com" },
+  "license": "MIT",
+  "keywords": ["claude-code", "harness", "bootstrap", "project-planner", "wrap"]
+}

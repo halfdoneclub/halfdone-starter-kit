@@ -1,0 +1,17 @@
+{
+  "description": "hfd 스타터 킷 — 세션 시작 맥락 주입(HANDOFF·현재 상태·교훈) + 파일 읽기 확인",
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start-context.sh\"", "timeout": 10 } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Edit|Write", "hooks": [ { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/hallucination-guard.mjs\" --pre", "timeout": 5 } ] }
+    ],
+    "PostToolUse": [
+      { "matcher": "Read|Grep", "hooks": [ { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/hallucination-guard.mjs\" --post", "timeout": 5 } ] }
+    ],
+    "PostToolUseFailure": [
+      { "matcher": "Edit", "hooks": [ { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/hallucination-guard.mjs\" --fail", "timeout": 5 } ] }
+    ]
+  }
+}

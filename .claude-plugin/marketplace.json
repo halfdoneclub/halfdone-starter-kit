@@ -1,0 +1,15 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "halfdone-starter-kit",
+  "description": "하프던클럽 Claude Code 스타터 킷 — 공식 기준에 맞는 하네스를 bootstrap → project-planner → wrap 흐름으로 짠다",
+  "owner": { "name": "Halfdone Club", "email": "910408aa@gmail.com" },
+  "plugins": [
+    {
+      "name": "hfd",
+      "description": "하프던클럽 스타터 킷 — /hfd:bootstrap(뼈대) → /hfd:project-planner(기획·하네스 인터뷰) → plan mode(구현) → /hfd:wrap(마무리·정리). 공용 하네스 규칙 세트(/hfd:harness) 포함.",
+      "source": "./plugins/hfd",
+      "category": "productivity",
+      "tags": ["harness", "bootstrap", "project-planner", "wrap", "claude-code"]
+    }
+  ]
+}
