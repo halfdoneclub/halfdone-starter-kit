@@ -40,6 +40,8 @@ plugins/hfd/
 └── hooks/                  세션 시작 때 지난 작업 맥락 주입 · 안 읽은 파일 수정 막기
 ```
 
+변경 이력은 [CHANGELOG.md](CHANGELOG.md).
+
 ## 공식 문서
 
 - OpenAI — 하네스 엔지니어링: https://openai.com/ko-KR/index/harness-engineering/
