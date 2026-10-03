@@ -40,6 +40,22 @@ GOOD_PRD = """# 테스트
 |---|---|---|
 | 거래처 검색 | 이름 입력 → 목록에 표시 | 실패 |
 """
+import datetime as _dt
+_TODAY = _dt.date.today().isoformat()
+HANDOFF_THIN = f"""# HANDOFF
+updated: {_TODAY}
+
+## 트랙
+- [ ] 할 일 하나
+"""
+HANDOFF_GOOD = f"""# HANDOFF
+updated: {_TODAY}
+
+## 트랙
+목표(사용자 원문): "계약서를 빨리 찾고 싶다"
+- [ ] 할 일 하나
+**읽는 순서:** 1. `docs/PRD.md`
+"""
 CHANGELOG = """# Changelog
 
 ## 현재 상태
@@ -58,11 +74,11 @@ def make(root: Path, files: dict[str, str]) -> None:
         p.write_text(text, encoding="utf-8")
 
 
-def run(root: Path) -> tuple[int, str]:
+def run(root: Path, extra: list[str] | None = None) -> tuple[int, str]:
     mem = root / "_mem"
     mem.mkdir(exist_ok=True)
     (mem / "MEMORY.md").write_text("# 메모리\n", encoding="utf-8")
-    r = subprocess.run([sys.executable, str(CHECK), "--project", str(root), "--memory", str(mem)],
+    r = subprocess.run([sys.executable, str(CHECK), "--project", str(root), "--memory", str(mem)] + (extra or []),
                        capture_output=True, text=True, encoding="utf-8")
     return r.returncode, r.stdout
 
@@ -90,6 +106,10 @@ CASES = [
     ("하네스 설정 빈 칸", {"docs/PRD.md": GOOD_PRD.replace("평가 방식: 기능이 실제로 동작하는지 별도 확인", "평가 방식:")}, 1, "평가 방식 비어 있음"),
     ("기능 확인 방법 빈 칸", {"docs/PRD.md": GOOD_PRD.replace("| 거래처 검색 | 이름 입력 → 목록에 표시 | 실패 |", "| 거래처 검색 |  | 실패 |")}, 1, "확인 방법 빈 줄"),
     ("archive는 등록 안 해도 됨", {"docs/archive/old.md": "# 옛날\n"}, 0, "문서 지도 (docs/)"),
+    ("HANDOFF 할 일만 있고 목표·읽는 순서 없음", {".claude/HANDOFF.md": HANDOFF_THIN}, 1, "HANDOFF 맥락 칸"),
+    ("HANDOFF 목표·읽는 순서 있음", {".claude/HANDOFF.md": HANDOFF_GOOD}, 0, "할 일 있는 트랙 모두 목표·읽는 순서 있음"),
+    ("wrap 실행(키워드)인데 사용자 원문 없음", {"__extra__": "--keywords 테스트"}, 1, "사용자 원문"),
+    ("wrap 실행(키워드) + 사용자 원문 있음", {"__extra__": "--keywords 테스트", "docs/references/index.md": "# references\n- [2026-10-04-user-verbatim.md](2026-10-04-user-verbatim.md) — 원문\n", "docs/references/2026-10-04-user-verbatim.md": "# 원문\n", "docs/index.md": GOOD_DOCS_INDEX + "- [references/](references/index.md) — 근거\n"}, 0, "| PASS | 사용자 원문"),
     ("bootstrap 틀의 형식 예시(코드 표시 안 링크)는 링크로 안 셈", {"docs/index.md": GOOD_DOCS_INDEX + "형식: `- [이름](경로) — 한 줄 설명`\n\n```markdown\n- [예시](없는파일.md)\n```\n"}, 0, "문서 지도 (docs/)"),
 ]
 
@@ -101,8 +121,9 @@ def main() -> int:
             root = Path(t)
             files = base()
             files.update(change)
+            extra = files.pop("__extra__", "").split()
             make(root, files)
-            code, out = run(root)
+            code, out = run(root, extra)
             ok = code == want_code and want_text in out
             bad += not ok
             print(("PASS " if ok else "FAIL ") + name + ("" if ok else f"  (종료 {code}, 기대 {want_code})"))

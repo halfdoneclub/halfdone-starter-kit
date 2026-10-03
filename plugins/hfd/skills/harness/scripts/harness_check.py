@@ -139,6 +139,26 @@ def check_handoff(project, rep, max_age_days):
             if key not in counts:
                 order.append(key)
             counts[key] = counts.get(key, 0) + 1
+    # 할 일이 있는 트랙은 「목표」와 「읽는 순서」 칸이 있어야 다음 세션이 이 대화 없이 같은 판단을 한다 (wrap 5단계)
+    bounds = []
+    heads = [i for i, ln in enumerate(lines, 1) if re.match(r"^#{2}\s+", ln)]
+    for k, h in enumerate(heads):
+        end = heads[k + 1] - 1 if k + 1 < len(heads) else len(lines)
+        bounds.append((h, end))
+    missing = []
+    for h, end in bounds:
+        body = "\n".join(lines[h:end])
+        if not re.search(r"^\s*[-*]\s*\[ \]", body, re.M):
+            continue
+        lack = [name for name, pat in (("목표", r"목표"), ("읽는 순서", r"읽는 순서")) if not re.search(pat, body)]
+        if lack:
+            missing.append((lines[h - 1].lstrip("# ").strip()[:40], h, lack))
+    if missing:
+        for t, l, lack in missing:
+            rep.add("FAIL", "HANDOFF 맥락 칸", f"'{t}'에 {'·'.join(lack)} 없음 — 할 일만 있으면 다음 세션이 이유를 모름", f"{rel}:{l}")
+    elif bounds:
+        rep.add("PASS", "HANDOFF 맥락 칸", "할 일 있는 트랙 모두 목표·읽는 순서 있음", rel)
+
     over = [(t, l, counts[(t, l)]) for t, l in order if counts[(t, l)] > HANDOFF_MAX_TODO_PER_TRACK]
     if over:
         for t, l, c in over:
@@ -467,6 +487,18 @@ def check_planner_docs(project, rep):
 
 
 # ---------------- RUN ----------------
+def check_user_verbatim(project, rep):
+    """wrap 1단계 f) — 이번 세션 사용자 원문 파일이 최근 1일 안에 만들어졌나."""
+    import glob
+    import time
+    files = glob.glob(os.path.join(project, "docs", "references", "*user-verbatim*.md"))
+    fresh = [f for f in files if time.time() - os.path.getmtime(f) < 86400]
+    if fresh:
+        rep.add("PASS", "사용자 원문", f"{len(fresh)}개 (최근 1일)", os.path.relpath(fresh[0], project))
+    else:
+        rep.add("FAIL", "사용자 원문", "최근 1일 안에 만든 `docs/references/<날짜>-user-verbatim.md` 없음 — wrap 1단계 f)", "docs/references/")
+
+
 def run_project(project, mem, keywords, max_age_days):
     rep = Report()
     h = check_handoff(project, rep, max_age_days)
@@ -475,8 +507,9 @@ def run_project(project, mem, keywords, max_age_days):
     check_claude_md(project, rep)
     check_docs_map(project, rep)
     check_planner_docs(project, rep)
-    if keywords:
+    if keywords:  # wrap 실행(키워드 있음)일 때만. --scan은 옛 프로젝트 기준선이라 제외
         check_keywords(project, mem, state_text, keywords, rep)
+        check_user_verbatim(project, rep)
     return rep, {**h, **c, **m}
 
 
