@@ -60,6 +60,8 @@ if [ -f ".claude/HANDOFF.md" ]; then
     echo "Format (plain markdown, no XML tags):"
     echo ""
     echo "  ---"
+    echo "  **Last session:** [「## 지난 세션」 하던 일 — one line]"
+    echo "  **Stopped at / first action:** [「## 지난 세션」 멈춘 곳·첫 행동 — copy its meaning exactly]"
     echo "  **Pending from last session:**"
     echo "  1. [extracted item]"
     echo "  2. [extracted item]"
@@ -67,6 +69,11 @@ if [ -f ".claude/HANDOFF.md" ]; then
     echo "  ---"
     echo ""
     echo "Output the block above FIRST, then address the user's message."
+    echo "If the HANDOFF has no 「## 지난 세션」 section, take Last session from <last-session-log> below."
+    echo "The first action is what 「지난 세션」 says, not whatever changed since (new commits, merged PRs,"
+    echo "server events). Those are outside updates: mention them after, never as the last session's work."
+    echo "Before answering a progress or continue-work request, open the 「읽는 순서」 files of the track"
+    echo "you are about to work on (originals, not summaries), together with any shared brain the project uses."
     echo ""
     echo "--- HANDOFF DATA (${HSRC}, ${AGE_DAYS}일 전) ---"
     head -n "$HANDOFF_MAX_LINES" "$HF"
@@ -90,6 +97,14 @@ if [ -f "CHANGELOG.md" ]; then
       echo "[잘림: 전체 ${STATE_TOTAL}줄 중 ${STATE_MAX_LINES}줄만 주입. /wrap으로 15줄 이하 정리 필요]"
     fi
     echo "</project-state>"
+  fi
+  # 2b. 세션 로그 맨 위 항목 1개 — 「지난 세션에 무엇을 했나」(HANDOFF는 할 일만 남기므로 여기서 보충). 최대 15줄
+  LAST_LOG=$(awk '/^## 세션 로그/{f=1; next} f && /^## /{exit} f && /^### /{n++} n==1{print} n>1{exit}' CHANGELOG.md 2>/dev/null | head -n 15)
+  if [ -n "$LAST_LOG" ]; then
+    echo "<last-session-log>"
+    echo "Source: CHANGELOG.md § 세션 로그 (newest entry)"
+    printf '%s\n' "$LAST_LOG"
+    echo "</last-session-log>"
   fi
 fi
 

@@ -48,10 +48,16 @@ updated: {_TODAY}
 ## 트랙
 - [ ] 할 일 하나
 """
+LAST = """## 지난 세션 (2026-10-06 00:00)
+- 하던 일: [트랙] 계약서 검색 화면을 만들던 중
+- 끝낸 것: 검색창 `src/search.tsx`
+- 멈춘 곳·첫 행동: 결과 정렬 전 → 정렬 기준을 사용자에게 묻기
+
+"""
 HANDOFF_GOOD = f"""# HANDOFF
 updated: {_TODAY}
 
-## 트랙
+{LAST}## 트랙
 목표(사용자 원문): "계약서를 빨리 찾고 싶다"
 - [ ] 할 일 하나
 **읽는 순서:** 1. `docs/PRD.md`
@@ -108,6 +114,9 @@ CASES = [
     ("archive는 등록 안 해도 됨", {"docs/archive/old.md": "# 옛날\n"}, 0, "문서 지도 (docs/)"),
     ("HANDOFF 할 일만 있고 목표·읽는 순서 없음", {".claude/HANDOFF.md": HANDOFF_THIN}, 1, "HANDOFF 맥락 칸"),
     ("HANDOFF 목표·읽는 순서 있음", {".claude/HANDOFF.md": HANDOFF_GOOD}, 0, "할 일 있는 트랙 모두 목표·읽는 순서 있음"),
+    ("HANDOFF 지난 세션 칸 없음", {".claude/HANDOFF.md": HANDOFF_GOOD.replace(LAST, "")}, 1, "「## 지난 세션」 칸 없음"),
+    ("HANDOFF 지난 세션 첫 행동 빈 칸", {".claude/HANDOFF.md": HANDOFF_GOOD.replace("멈춘 곳·첫 행동: 결과 정렬 전 → 정렬 기준을 사용자에게 묻기", "멈춘 곳·첫 행동:")}, 1, "첫 행동 비어 있음"),
+    ("HANDOFF 지난 세션 칸 있음", {".claude/HANDOFF.md": HANDOFF_GOOD}, 0, "하던 일·끝낸 것·첫 행동 있음"),
     ("wrap 실행(키워드)인데 사용자 원문 없음", {"__extra__": "--keywords 테스트"}, 1, "사용자 원문"),
     ("wrap 실행(키워드) + 사용자 원문 있음", {"__extra__": "--keywords 테스트", "docs/references/index.md": "# references\n- [2026-10-04-user-verbatim.md](2026-10-04-user-verbatim.md) — 원문\n", "docs/references/2026-10-04-user-verbatim.md": "# 원문\n", "docs/index.md": GOOD_DOCS_INDEX + "- [references/](references/index.md) — 근거\n"}, 0, "| PASS | 사용자 원문"),
     ("bootstrap 틀의 형식 예시(코드 표시 안 링크)는 링크로 안 셈", {"docs/index.md": GOOD_DOCS_INDEX + "형식: `- [이름](경로) — 한 줄 설명`\n\n```markdown\n- [예시](없는파일.md)\n```\n"}, 0, "문서 지도 (docs/)"),

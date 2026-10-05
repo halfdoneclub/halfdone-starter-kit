@@ -139,6 +139,26 @@ def check_handoff(project, rep, max_age_days):
             if key not in counts:
                 order.append(key)
             counts[key] = counts.get(key, 0) + 1
+    # 「지난 세션」 칸 — 할 일 목록만 있으면 다음 세션이 "무엇을 하던 중이었나"를 모르고
+    # 새 커밋·PR 같은 바깥 변경을 진행상황으로 앞세운다 (wrap 5단계, 2026-10-06 홈케어)
+    if any(re.match(r"^\s*[-*]\s*\[ \]", ln) for ln in lines):
+        start = next((i for i, ln in enumerate(lines, 1) if re.match(r"^#{2}\s+지난 세션", ln)), None)
+        if start is None:
+            rep.add("FAIL", "HANDOFF 지난 세션", "「## 지난 세션」 칸 없음 — 하던 일·끝낸 것·멈춘 곳·첫 행동을 적어야 함", f"{rel}:1")
+        else:
+            nxt = next((i for i, ln in enumerate(lines, 1) if i > start and re.match(r"^#{1,2}\s+", ln)), len(lines) + 1)
+            body = lines[start:nxt - 1]
+            lack = []
+            for name in ("하던 일", "끝낸 것", "첫 행동"):
+                hit = next((ln for ln in body if name in ln), None)
+                # 이름 뒤 「:」 다음에 내용이 있어야 한다 (틀만 복사하고 비운 칸 방지)
+                if hit is None or not re.search(r"[:：]\s*\S", hit.split(name, 1)[1]):
+                    lack.append(name)
+            if lack:
+                rep.add("FAIL", "HANDOFF 지난 세션", f"{'·'.join(lack)} 비어 있음", f"{rel}:{start}")
+            else:
+                rep.add("PASS", "HANDOFF 지난 세션", "하던 일·끝낸 것·첫 행동 있음", f"{rel}:{start}")
+
     # 할 일이 있는 트랙은 「목표」와 「읽는 순서」 칸이 있어야 다음 세션이 이 대화 없이 같은 판단을 한다 (wrap 5단계)
     bounds = []
     heads = [i for i, ln in enumerate(lines, 1) if re.match(r"^#{2}\s+", ln)]
