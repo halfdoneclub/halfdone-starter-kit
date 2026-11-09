@@ -5,6 +5,7 @@
 - --session 생략 시: ~/.claude/projects/<열린 폴더 변환 이름>/ 에서 가장 최근 jsonl
 - 사용자 메시지(text)와 선택지 답변(AskUserQuestion 결과·도구 거절 사유)을 시간순 그대로 옮긴다. 요약하지 않는다.
 - 스킬 본문·시스템 알림·작업 알림은 뺀다. 32자 이상 긴 토큰은 *** 로 가린다.
+- 같은 날짜 파일이 이미 있고 다른 세션 것이면 덮어쓰지 않고 `<날짜>-user-verbatim-<세션 앞 8자>.md`로 저장한다.
 """
 from __future__ import annotations
 
@@ -87,6 +88,10 @@ def main() -> None:
                     n_ans += 1
     dst = os.path.join(a.project, "docs", "references", f"{a.date}-user-verbatim.md")
     os.makedirs(os.path.dirname(dst), exist_ok=True)
+    # 같은 날 다른 세션이 만든 원문 파일은 덮어쓰지 않는다(같은 세션의 두 번째 wrap만 갱신).
+    if os.path.exists(dst) and f"> 원본: `{sess}`" not in open(dst, encoding="utf-8").read(4000):
+        sid = os.path.splitext(os.path.basename(sess))[0][:8]
+        dst = dst[:-3] + f"-{sid}.md"
     open(dst, "w", encoding="utf-8").write("".join(out))
     print(f"저장: {dst} (메시지 {n_msg} · 선택지 답변 {n_ans})")
 
