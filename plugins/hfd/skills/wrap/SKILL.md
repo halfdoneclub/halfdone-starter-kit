@@ -84,7 +84,7 @@ description: 세션 마무리 — 대화에만 있는 조사 결론·결정 이�
 
 **f) 사용자 원문 전체** → `docs/references/<YYYY-MM-DD>-user-verbatim.md` (이 단계는 `quick`에서도 생략하지 않는다)
 - 세션 원본 기록 jsonl에서 사용자 메시지(`"type":"user"`의 text)와 **선택지 답변**(AskUserQuestion 결과·도구 거절 사유)을 **전부 시간순으로 그대로** 옮긴다. 요약하지 않는다. 스킬 본문·시스템 알림은 뺀다. 긴 토큰은 `***`로 가린다.
-  기계 작업이므로 스크립트로 한다: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/wrap/scripts/export_user_verbatim.py" --project "<작업 폴더>"` (세션 파일을 못 찾으면 `--session <jsonl>`). 같은 날 두 번째 wrap이면 다시 실행해 덮어쓴다.
+  기계 작업이므로 스크립트로 한다: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/wrap/scripts/export_user_verbatim.py" --project "<작업 폴더>"` (세션 파일을 못 찾으면 `--session <jsonl>`). 같은 날 두 번째 wrap이면 다시 실행해 덮어쓴다. 같은 날짜 파일이 다른 세션 것이면 스크립트가 덮어쓰지 않고 `<날짜>-user-verbatim-<세션 앞 8자>.md`로 저장한다 — 출력된 「저장:」 경로를 index에 등록한다.
 - 9단계 검사가 최근 1일 안의 원문 파일이 없으면 FAIL로 막는다.
 - 파일 머리에 "**판단이 갈리면 이 파일이 이긴다**" 한 줄. `docs/references/index.md`에 등록한다.
 - 왜: 결정·교정·목표의 근거는 사용자 말 자체다. 요약본으로 옮기면 예외 조항과 교정이 빠진다.
